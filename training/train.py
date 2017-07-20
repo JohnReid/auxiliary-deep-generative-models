@@ -1,6 +1,6 @@
 import numpy as np
 from utils import env_paths as paths
-from base import Train
+from .base import Train
 import time
 
 

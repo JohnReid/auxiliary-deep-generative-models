@@ -1,5 +1,6 @@
 venv
 parmesan
+miniconda3
 *.pyc
 *.pkl
 *.png

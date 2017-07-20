@@ -7,7 +7,7 @@ plt.ioff()
 from utils import env_paths as paths
 import seaborn as sns
 import numpy as np
-import cPickle as pkl
+import pickle as pkl
 
 
 class Train(object):
