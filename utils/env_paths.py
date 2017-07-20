@@ -57,7 +57,7 @@ def find_logging_path(id):
         if str(id) in d:
             path = join(out, d)
     if path == '':
-        raise 'The ID couldn\'t be found'
+        raise ValueError('The ID couldn\'t be found')
     for f in listdir(path):
         if 'log' in f:
             return join(path, f)

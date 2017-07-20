@@ -59,7 +59,7 @@ def create_semi_supervised(xy, n_labeled, rng):
         y[i] = pad_targets(y[i], n_classes)
 
     if n_labeled % n_classes != 0:
-        raise "n_labeled (wished number of labeled samples) not divisible by n_classes (number of classes)"
+        raise ValueError("n_labeled (wished number of labeled samples) not divisible by n_classes (number of classes)")
     n_labels_per_class = n_labeled / n_classes
     x_labeled = [0] * n_classes
     x_unlabeled = [0] * n_classes
