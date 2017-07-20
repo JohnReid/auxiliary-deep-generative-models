@@ -1,0 +1,37 @@
+#!/bin/bash
+
+#! sbatch directives begin here ###############################
+#! Name of the job:
+#SBATCH -J RUNMNIST
+#! Which project should be charged (NB Wilkes projects end in '-GPU'):
+#SBATCH -A MRC-BSU-SL2-GPU
+#! How many whole nodes should be allocated?
+#SBATCH --nodes=1
+#! How many (MPI) tasks will there be in total? (<=nodes*12)
+#SBATCH --ntasks=1
+##SBATCH --array=0-47%5
+#! How much wallclock time will be required? [nrg] if unknown set to 12h (12:00:00) 
+#SBATCH --time=1:00:00
+#! What types of email messages do you wish to receive?
+##SBATCH --mail-type=FAIL
+#! Uncomment this to prevent the job from being requeued (e.g. if
+#! interrupted by node failure or system downtime):
+##SBATCH --no-requeue
+#SBATCH --mem=29000
+#SBATCH --exclusive
+#! Where to put output and error
+#SBATCH -o output/run-mnist-%j.out
+#SBATCH -e output/run-mnist-%j.err
+#! Do not change:
+#SBATCH -p mrc-bsu-tesla
+#! sbatch directives end here (put any additional directives above this line)
+
+. /etc/profile.d/modules.sh                # Leave this line (enables the module command)
+module purge                               # Removes all modules still loaded
+module load default-wilkes                 # REQUIRED - loads the basic environment
+module list
+module swap cuda cuda/8.0
+module load cuda/8.0
+module load cudnn/5.1_cuda-8.0
+
+miniconda2/bin/python run-mnist
