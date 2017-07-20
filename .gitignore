@@ -1,3 +1,5 @@
+venv
+parmesan
 *.pyc
 *.pkl
 *.png
