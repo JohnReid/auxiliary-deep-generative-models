@@ -30,6 +30,15 @@
 Train a skip deep generative model on the mnist dataset with 100 evenly distributed labels.
 """
 
+#
+# Configure logging
+import logging
+LOGFORMAT = '%(asctime)s %(levelname)s %(message)s'
+logging.basicConfig(level=logging.INFO, format=LOGFORMAT)
+
+#
+# Imports
+#
 import theano
 from training.train import TrainModel
 from lasagne_extensions.nonlinearities import rectify
@@ -46,7 +55,7 @@ n, n_x = mnist_data[0][0].shape  # Datapoints in the dataset, input features.
 n_samples = 100  # The number of sampled labeled data points for each batch.
 n_batches = n / 100  # The number of batches.
 bs = n / n_batches  # The batchsize.
-hidspec = [50]  # Specification for hidden layers.
+hidspec = [10, 10]  # Specification for hidden layers.
 
 # Initialize the auxiliary deep generative model.
 model = SDGMSSL(n_x=n_x, n_a=100, n_z=100, n_y=10, qa_hid=hidspec,

@@ -9,6 +9,7 @@ import seaborn as sns
 import numpy as np
 import cPickle as pkl
 
+LOGFORMAT = '%(asctime)s %(levelname)s %(message)s'
 
 class Train(object):
     """
@@ -78,18 +79,13 @@ class Train(object):
         """
         Initiate the logging, so that all the training output will be saved in a .log file.
         """
-        logger = logging.getLogger('%slogger' % self.__class__.__name__)
-        for hdlr in logger.handlers:
-            logger.removeHandler(hdlr)
-        hdlr = logging.FileHandler(paths.get_logging_path(self.model.get_root_path()))
-        formatter = logging.Formatter('%(message)s')
+        self.logger = logging.getLogger('{}.{}'.format(self.__class__,  str(id(self))))
+        formatter = logging.Formatter(LOGFORMAT)
+        # Add a FileHandler
+        logpath = paths.get_logging_path(self.model.get_root_path())
+        hdlr = logging.FileHandler(logpath)
         hdlr.setFormatter(formatter)
-        logger.addHandler(hdlr)
-        ch = logging.StreamHandler(sys.stdout)
-        ch.setFormatter(formatter)
-        logger.addHandler(ch)
-        logger.setLevel(logging.INFO)
-        self.logger = logger
+        self.logger.addHandler(hdlr)
 
     def write_to_logger(self, s):
         """
