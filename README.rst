@@ -13,23 +13,20 @@ Please make sure you have installed the requirements before executing the python
 
 **Install**
 
+Download miniconda2 from https://conda.io/miniconda.html and install it (locally if you prefer).
 
-.. code-block:: bash
-
-  git clone https://github.com/casperkaae/parmesan.git
-  cd parmesan
-  python setup.py develop
-  pip install numpy
-  pip install seaborn
-  pip install matplotlib
-  pip install https://github.com/Theano/Theano/archive/master.zip
-  pip install https://github.com/Lasagne/Lasagne/archive/master.zip
+```bash
+conda install pygpu
+pip install -r requirements.txt
+```
 
 
 Examples
 -------------
 The repository primarily includes a script running a new model on the MNIST dataset with only 100 labels - *run_sdgmssl_mnist.py*.
+This script now appears to be `run-mnist`.
 
 Please see the source code and code examples for further details. For some visualisations of the latent space and the
 half moon classification examples, see https://youtu.be/g-c-xOmA2nA, https://youtu.be/hnhkKTSdmls and https://youtu.be/O8-VYr4CxsI.
+
 
