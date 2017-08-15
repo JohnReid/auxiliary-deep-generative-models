@@ -49,7 +49,7 @@ def run_sdgmssl_mnist():
     # and the custom evaluation method every 10 epochs.
     train = TrainModel(model=model, output_freq=1, pickle_f_custom_freq=10, f_custom_eval=custom_evaluation)
     train.add_initial_training_notes("Training the skip deep generative model with %i labels. bn %s. seed %i." % (
-    n_labeled, str(model.batchnorm), seed))
+        n_labeled, str(model.batchnorm), seed))
     train.train_model(f_train, train_args,
                       f_test, test_args,
                       f_validate, validate_args,
@@ -58,6 +58,7 @@ def run_sdgmssl_mnist():
                       # Any symbolic model variable can be annealed during
                       # training with a tuple of (var_name, every, scale constant, minimum value).
                       anneal=[("learningrate", 200, 0.75, 3e-5)])
+
 
 if __name__ == "__main__":
     run_sdgmssl_mnist()

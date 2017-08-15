@@ -31,10 +31,13 @@ def get_custom_eval_path(i, root_path):
     r_path = path_exists(join(root_path, 'training custom evals'))
     return join(r_path, 'custom_eval_plot_%s.png' % str(i))
 
+
 def get_plot_evaluation_path():
     return join(get_output_path(), 'evaluation.png')
 
 # Pickle
+
+
 def get_pickle_path(root_path):
     return path_exists(join(root_path, 'pickled model'))
 
@@ -48,6 +51,7 @@ def get_logging_path(root_path):
     t = time.time()
     n = "_logging_%s.log" % datetime.datetime.fromtimestamp(t).strftime('%Y-%m-%d-%H%M%S')
     return join(root_path, n)
+
 
 def find_logging_path(id):
     out = get_output_path()
@@ -63,6 +67,8 @@ def find_logging_path(id):
             return join(path, f)
 
 # Root path
+
+
 def get_root_output_path(type, n_in, n_hidden, n_out, id):
     root = 'id_%s_%s_%s_%s_%s' % (str(id), type, str(n_in), str(n_hidden), str(n_out))
     path = join(get_output_path(), root)
@@ -74,7 +80,8 @@ def create_root_output_path(type, n_in, n_hidden, n_out):
     d = datetime.datetime.fromtimestamp(t).strftime('%Y%m%d%H%M%S')
     root = 'id_%s_%s_%s_%s_%s' % (str(d), type, str(n_in), str(n_hidden), str(n_out))
     path = join(get_output_path(), root)
-    if exists(path): path += "_(%s)" % str(uuid.uuid4())
+    if exists(path):
+        path += "_(%s)" % str(uuid.uuid4())
     return path_exists(path)
 
 

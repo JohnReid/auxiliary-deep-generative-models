@@ -79,7 +79,8 @@ class Train(object):
         Initiate the logging, so that all the training output will be saved in a .log file.
         """
         logger = logging.getLogger('%slogger' % self.__class__.__name__)
-        for hdlr in logger.handlers: logger.removeHandler(hdlr)
+        for hdlr in logger.handlers:
+            logger.removeHandler(hdlr)
         hdlr = logging.FileHandler(paths.get_logging_path(self.model.get_root_path()))
         formatter = logging.Formatter('%(message)s')
         hdlr.setFormatter(formatter)

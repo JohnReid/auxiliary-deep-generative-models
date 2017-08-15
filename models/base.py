@@ -83,13 +83,13 @@ class Model(object):
             if validation_set[1] is not None:
                 self.sh_valid_t = theano.shared(np.asarray(validation_set[1], dtype=theano.config.floatX), borrow=True)
 
-
     def dump_model(self, epoch=None):
         """
         Dump the model into a pickled version in the model path formulated in the initialisation method.
         """
         p = paths.get_model_path(self.get_root_path(), self.model_name, self.n_in, self.n_hidden, self.n_out)
-        if not epoch is None: p += "_epoch_%i" % epoch
+        if not epoch is None:
+            p += "_epoch_%i" % epoch
         if self.model_params is None:
             raise ("Model params are not set and can therefore not be pickled.")
         model_params = [param.get_value() for param in self.model_params]

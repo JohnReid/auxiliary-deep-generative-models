@@ -12,7 +12,7 @@ def _download(extra=False, normalize=True):
     """
 
     def norm(x):
-        x = x.swapaxes(2,3).swapaxes(1,2)
+        x = x.swapaxes(2, 3).swapaxes(1, 2)
         x = x.reshape((-1, 3, 32 * 32))
         std = x.std(axis=(-1, 0))
         x[:, 0] /= std[0]
