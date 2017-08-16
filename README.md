@@ -1,9 +1,9 @@
 Auxiliary Deep Generatives Models
 =======
-This repository is the implementation of the article on `Auxiliary Deep Generative Models <http://arxiv.org/abs/1602.05473>`_.
+This repository is the implementation of the article on [Auxiliary Deep Generative Models](http://arxiv.org/abs/1602.05473).
 
 
-The implementation is build on the `Parmesan <https://github.com/casperkaae/parmesan>`_, `Lasagne <http://github.com/Lasagne/Lasagne>`_ and `Theano <https://github.com/Theano/Theano>`_ libraries.
+The implementation is build on the [Parmesan](https://github.com/casperkaae/parmesan), [Lasagne](http://github.com/Lasagne/Lasagne) and [Theano](https://github.com/Theano/Theano) libraries.
 
 
 Installation
