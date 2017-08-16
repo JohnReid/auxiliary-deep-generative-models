@@ -23,8 +23,7 @@ pip install -r requirements.txt
 
 Examples
 -------------
-The repository primarily includes a script running a new model on the MNIST dataset with only 100 labels - *run_sdgmssl_mnist.py*.
-This script now appears to be `run-mnist`.
+The repository primarily includes a script running a new model on the MNIST dataset with only 100 labels - `run-mnist`.
 
 Please see the source code and code examples for further details. For some visualisations of the latent space and the
 half moon classification examples, see https://youtu.be/g-c-xOmA2nA, https://youtu.be/hnhkKTSdmls and https://youtu.be/O8-VYr4CxsI.
