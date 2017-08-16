@@ -4,7 +4,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 plt.ioff()
-from utils import env_paths as paths
+from ..utils import env_paths as paths
 import seaborn as sns
 import numpy as np
 import cPickle as pkl

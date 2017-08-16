@@ -3,7 +3,7 @@ import lasagne
 import numpy as np
 import theano
 import theano.tensor as T
-from utils import env_paths as paths
+from ..utils import env_paths as paths
 from collections import OrderedDict
 
 
