@@ -99,6 +99,7 @@ class TrainModel(Train):
                 csv_outputs = [epoch, end_time] + outputs
                 format_str = ','.join(['{}'] * len(csv_outputs))
                 print >>self.learning_csv, format_str.format(*csv_outputs)
+                self.learning_csv.flush()
 
             if self.pickle_f_custom_freq is not None and epoch % self.pickle_f_custom_freq == 0:
                 if self.custom_eval_func is not None:
