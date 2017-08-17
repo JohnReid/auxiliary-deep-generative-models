@@ -14,6 +14,9 @@ from parmesan.distributions import log_normal
 from theano.tensor.shared_randomstreams import RandomStreams
 import numpy as np
 
+from logging import getLogger
+logger = getLogger(__name__)
+
 
 class SDGMSSL(Model):
     """
