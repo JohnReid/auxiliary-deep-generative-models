@@ -6,6 +6,9 @@ from pylearn2.datasets import norb
 from scipy.misc import imresize
 from data_helper import create_semi_supervised, pad_targets, cut_off_dataset
 
+from logging import getLogger
+logger = getLogger(__name__)
+
 
 def _download(normalize=True):
     """
@@ -27,7 +30,7 @@ def _download(normalize=True):
             origin = (
                 os.path.join('http://www.cs.nyu.edu/~ylclab/data/norb-v1.0-small/', data_file)
             )
-            print 'Downloading data from %s' % origin
+            logger.info('Downloading data from %s', origin)
 
             urllib.urlretrieve(origin, dataset)
         return dataset

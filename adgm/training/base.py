@@ -1,5 +1,6 @@
 import logging
 import sys
+import os
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -81,11 +82,19 @@ class Train(object):
         """
         self.logger = logging.getLogger('{}.{}'.format(self.__class__,  str(id(self))))
         formatter = logging.Formatter(LOGFORMAT)
+        #
         # Add a FileHandler
         logpath = paths.get_logging_path(self.model.get_root_path())
         hdlr = logging.FileHandler(logpath)
         hdlr.setFormatter(formatter)
         self.logger.addHandler(hdlr)
+        #
+        # Open a file to save learning curve information
+        learningcsvfile = os.path.join(self.model.get_root_path(), 'learning.csv')
+        self.logger.info('Will write learning curves to: %s', learningcsvfile)
+        self.learning_csv = open(learningcsvfile, 'w')
+        # These output columns can change, don't hardcode them
+        # self.learning_csv.write('epoch,time,lb,lb-labeled,lb-unlabeled,test,validation')
 
     def write_to_logger(self, s):
         """

@@ -94,6 +94,13 @@ class TrainModel(Train):
                 output_str %= tuple(outputs)
                 self.write_to_logger(output_str)
 
+                #
+                # Write in CSV format
+                csv_outputs = [epoch, end_time] + outputs
+                format_str = ','.join(['{}'] * len(csv_outputs))
+                print >>self.learning_csv, format_str.format(*csv_outputs)
+                self.learning_csv.flush()
+
             if self.pickle_f_custom_freq is not None and epoch % self.pickle_f_custom_freq == 0:
                 if self.custom_eval_func is not None:
                     self.custom_eval_func(self.model, paths.get_custom_eval_path(epoch, self.model.root_path))
