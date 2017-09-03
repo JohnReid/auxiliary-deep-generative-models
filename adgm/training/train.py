@@ -28,7 +28,9 @@ class TrainModel(Train):
         self.write_to_logger("### TRAINING MODEL ###")
 
         if self.custom_eval_func is not None:
-            self.custom_eval_func(self.model, paths.get_custom_eval_path(0, self.model.root_path))
+            test_auprc = self.custom_eval_func(self.model, paths.get_custom_eval_path(0, self.model.root_path))
+            print >>self.testeval_csv, '0, {}'.format(test_auprc)
+            self.testeval_csv.flush()
 
         done_looping = False
         epoch = 0
@@ -103,11 +105,14 @@ class TrainModel(Train):
 
             if self.pickle_f_custom_freq is not None and epoch % self.pickle_f_custom_freq == 0:
                 if self.custom_eval_func is not None:
-                    self.custom_eval_func(self.model, paths.get_custom_eval_path(epoch, self.model.root_path))
+                    test_auprc = self.custom_eval_func(self.model, paths.get_custom_eval_path(epoch, self.model.root_path))
+                    print >>self.testeval_csv, '{}, {}'.format(epoch, test_auprc)
+                    self.testeval_csv.flush()
                 self.plot_eval(self.eval_train, train_args['outputs'].keys(), "_train")
                 self.plot_eval(self.eval_test, test_args['outputs'].keys(), "_test")
                 self.plot_eval(self.eval_validation, validation_args['outputs'].keys(), "_validation")
                 self.dump_dicts()
                 self.model.dump_model()
+
         if self.pickle_f_custom_freq is not None:
             self.model.dump_model()

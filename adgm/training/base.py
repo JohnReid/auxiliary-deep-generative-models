@@ -95,6 +95,10 @@ class Train(object):
         self.learning_csv = open(learningcsvfile, 'w')
         # These output columns can change, don't hardcode them
         # self.learning_csv.write('epoch,time,lb,lb-labeled,lb-unlabeled,test,validation')
+        # Csv file for test evaluation log
+        testevalcsvfile = os.path.join(self.model.get_root_path(), 'testeval.csv')
+        self.logger.info('Will write test eval values to: %s', testevalcsvfile)
+        self.testeval_csv = open(testevalcsvfile, 'w')
 
     def write_to_logger(self, s):
         """
@@ -102,6 +106,8 @@ class Train(object):
         :param s: A string with the text to print.
         """
         self.logger.info(s)
+
+
 
     def add_initial_training_notes(self, s):
         """
@@ -120,3 +126,10 @@ class Train(object):
                 new_s += "\n"
             new_s += " " + w_lst[i]
         self.write_to_logger(new_s)
+
+    def write_config_file(self, config_dict):
+        configfilepath = os.path.join(self.model.get_root_path(), 'config.txt')
+        self.logger.info('Writing config file at %s', configfilepath)
+        configfile = open(configfilepath, 'w')
+        for k, v in config_dict.iteritems():
+            configfile.write('{}: {}\n'.format(k,v))
