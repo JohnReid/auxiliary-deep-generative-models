@@ -117,18 +117,6 @@ class TrainModel(Train):
                 print >>self.learning_csv, format_str.format(*csv_outputs)
                 self.learning_csv.flush()
 
-                #
-                # Check if stopping criterion is met
-                #
-                this_elbo = np.mean(np.asarray(train_outputs)[:,0])
-                done_looping = is_stopping_criterion_met(prev_epoch_elbo, this_elbo)
-
-                if not done_looping:
-                    prev_epoch_elbo = this_elbo
-
-                else:
-                    break
-
 
             if self.pickle_f_custom_freq is not None and epoch % self.pickle_f_custom_freq == 0:
                 if self.custom_eval_func is not None:
@@ -141,6 +129,17 @@ class TrainModel(Train):
                 #self.plot_eval(self.eval_validation, validation_args['outputs'].keys(), "_validation")
                 #self.dump_dicts()
                 #self.model.dump_model()
+
+            #
+            # Check if stopping criterion is met
+            #
+            this_elbo = np.mean(np.asarray(train_outputs)[:,0])
+            done_looping = is_stopping_criterion_met(prev_epoch_elbo, this_elbo)
+
+            if not done_looping:
+                prev_epoch_elbo = this_elbo
+            else:
+                break
 
         #if self.pickle_f_custom_freq is not None:
         #    self.model.dump_model()
