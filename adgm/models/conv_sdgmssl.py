@@ -1,7 +1,7 @@
 import theano
 import theano.tensor as T
 from lasagne import init
-from lasagne.layers import Conv2DLayer, TransposedConv2DLayer, ConcatLayer
+from lasagne.layers import Conv2DLayer, TransposedConv2DLayer, ConcatLayer, SliceLayer, DropoutLayer
 from base import Model
 from ..lasagne_extensions.layers import (SampleLayer, MultinomialLogDensityLayer,
                                        GaussianLogDensityLayer, StandardNormalLogDensityLayer, BernoulliLogDensityLayer,
@@ -22,17 +22,19 @@ class ConvSDGMSSL(Model):
     Auxiliary Generative Models article on Arxiv.org.
     """
 
-    def __init__(self, input_size, n_a, n_z, n_y, qa_hid, qz_hid, qy_hid, px_hid, pa_hid, nonlinearity=rectify,
-                 use_mi_features=False, px_nonlinearity=None, x_dist='bernoulli', batchnorm=False, seed=1234):
+    def __init__(self, input_size, n_a, n_z, n_y, qa_hid, qz_hid, qy_hid, px_hid, pa_hid, model_logger, nonlinearity=rectify,
+                 n_mi_features=0, dropout_prob=0.0, px_nonlinearity=None, x_dist='bernoulli', batchnorm=False, seed=1234):
 
-        super(ConvSDGMSSL, self).__init__(input_size**2, qz_hid + px_hid, n_a + n_z, nonlinearity)
+        super(ConvSDGMSSL, self).__init__(input_size**2, qz_hid + px_hid, n_a + n_z, nonlinearity, model_logger)
         self.x_dist = x_dist
         self.n_y = n_y
         self.input_size = input_size
+        self.n_mi_features = n_mi_features
         self.n_a = n_a
         self.n_z = n_z
         self.batchnorm = batchnorm
         self._srng = RandomStreams(seed)
+
 
         # Decide Glorot initializaiton of weights.
         init_w = 1e-3
@@ -55,6 +57,8 @@ class ConvSDGMSSL(Model):
             dense = DenseLayer(layer_in, n, dist_w(hid_w), dist_b(init_w), None)
             if batchnorm:
                 dense = BatchNormLayer(dense)
+            if dropout_prob != 0.0:
+                dense = DropoutLayer(dense, dropout_prob)
             return NonlinearityLayer(dense, self.transf)
 
         def stochastic_layer(layer_in, n, samples, nonlin=None):
@@ -84,34 +88,53 @@ class ConvSDGMSSL(Model):
         #
 
         def conv_net(input_layer):
+            if self.n_mi_features != 0:
+                conv_input = SliceLayer(input_layer, indices=slice(0,input_layer.shape[1] - self.n_mi_features))
+                mi_input = SliceLayer(input_layer, indices=slice(input_layer.shape[1]-2,None))
+            else:
+                conv_input = input_layer
+                mi_input = None
+
+            conv_input = ReshapeLayer(conv_input, (-1, 1, self.input_size, self.input_size))
+
             conv_layer_output_shapes = []
-            output = Conv2DLayer(input_layer, 64, 5, stride=2, pad='same')
+            output = Conv2DLayer(conv_input, 64, 5, stride=2, pad='same')
             conv_layer_output_shapes.append(output.output_shape[2])
             output = Conv2DLayer(output, 128, 5, stride=2, pad='same')
             conv_layer_output_shapes.append(output.output_shape[2])
             output = ReshapeLayer(output, (-1, num_elems(output)))
+            if mi_input is not None:
+                output = ConcatLayer([output, mi_input], axis=1)
             output = BatchNormLayer(DenseLayer(output, conv_output_size))
             return output, conv_layer_output_shapes
 
         def deconv_net(input_layer, conv_layer_output_shapes):
-            output = BatchNormLayer(DenseLayer(input_layer, 128*7*7))
-            output = ReshapeLayer(output, (-1, 128, 7, 7))
+            output = BatchNormLayer(DenseLayer(input_layer, 128*7*7 + self.n_mi_features))
+            if self.n_mi_features != 0:
+                deconv_input = SliceLayer(output, indices=slice(0,128*7*7))
+                mi_features = SliceLayer(output, indices=slice(128*7*7, 128*7*7 + self.n_mi_features))
+
+            else:
+                deconv_input = output
+                mi_features = None
+
+            output = ReshapeLayer(deconv_input, (-1, 128, 7, 7))
             output = TransposedConv2DLayer(output, 64, 5, stride=2, crop='same', output_size=conv_layer_output_shapes[0])
-            output = TransposedConv2DLayer(output, 1, 5, stride=2, crop='same', output_size=input_size, nonlinearity=sigmoid)
+            output = TransposedConv2DLayer(output, 1, 5, stride=2, crop='same', output_size=self.input_size, nonlinearity=sigmoid)
+            output = ReshapeLayer(output, (-1, self.input_size**2))
+
+            if mi_features is not None:
+                output = ConcatLayer([output, mi_features], axis=1)
+
             return output
 
 
         # Input layers
-        l_x_in = InputLayer((None, input_size**2))
+        l_x_in = InputLayer((None, self.input_size**2 + self.n_mi_features))
         l_y_in = InputLayer((None, n_y))
-
-        # MI features
-        n_mi_features = 2
-        mi_input = InputLayer((None,2))
 
         # Reshape x to be square 2d array so that can keep using previous implementation of the
         # integration over y (see build_model)
-        l_x_2d = ReshapeLayer(l_x_in, (-1, 1, input_size, input_size))
         
 
         ############################################################################
@@ -119,10 +142,9 @@ class ConvSDGMSSL(Model):
         ############################################################################
 
         # Two convolutional layers. Can add batch norm or change nonlinearity to lrelu
-        l_qa_x, conv_layer_output_shapes = conv_net(l_x_2d)
+        l_qa_x, conv_layer_output_shapes = conv_net(l_x_in)
         # Add mutual information features
-        #if use_mi_features:
-        #    l_qa_x = ConcatLayer([l_qa_x, mi_input])
+        
         if len(qa_hid) > 1:
             for hid in qy_hid[1:]:
                 l_qy_xa = dense_layer(l_qa_x, hid)
@@ -137,11 +159,11 @@ class ConvSDGMSSL(Model):
         ############################################################################
 
         # Dense layers for input a
-        l_qa_to_qy = DenseLayer(l_qa_x, conv_output_size,init.GlorotNormal(hid_w), init.Normal(init_w), None)
+        l_qa_to_qy = dense_layer(l_qa_x, conv_output_size)
         l_qa_to_qy = ReshapeLayer(l_qa_to_qy, (-1, self.sym_samples, 1, conv_output_size))
 
         # Convolutional layers for input x
-        l_x_to_qy, _ = conv_net(l_x_2d)
+        l_x_to_qy, _ = conv_net(l_x_in)
         l_x_to_qy = DimshuffleLayer(l_x_to_qy, (0, 'x', 'x', 1))
 
         # Combine layers from x and a
@@ -168,7 +190,7 @@ class ConvSDGMSSL(Model):
         l_qa_to_qz = ReshapeLayer(l_qa_to_qz, (-1, self.sym_samples, 1, conv_output_size))
 
         # Convolutional layers for x
-        l_x_to_qz, _ = conv_net(l_x_2d)
+        l_x_to_qz, _ = conv_net(l_x_in)
         l_x_to_qz = DimshuffleLayer(l_x_to_qz, (0, 'x', 'x', 1))
 
         # Dense layers for y
@@ -231,14 +253,14 @@ class ConvSDGMSSL(Model):
         
         # Generate x using transposed convolutional layers
         l_px_azy = deconv_net(l_px_azy, conv_layer_output_shapes)
-        l_px_azy = ReshapeLayer(l_px_azy, (-1, input_size**2))
+        l_px_azy = ReshapeLayer(l_px_azy, (-1, self.input_size**2 + self.n_mi_features))
 
         if x_dist == 'bernoulli':
-            l_px_azy = DenseLayer(l_px_azy, input_size**2, init.GlorotNormal(), init.Normal(init_w), sigmoid)
+            l_px_azy = DenseLayer(l_px_azy, self.input_size**2 + self.n_mi_features, init.GlorotNormal(), init.Normal(init_w), sigmoid)
         elif x_dist == 'multinomial':
-            l_px_azy = DenseLayer(l_px_azy, input_size**2, init.GlorotNormal(), init.Normal(init_w), softmax)
+            l_px_azy = DenseLayer(l_px_azy, self.input_size**2 + self.n_mi_features, init.GlorotNormal(), init.Normal(init_w), softmax)
         elif x_dist == 'gaussian':
-            l_px_azy, l_px_zy_mu, l_px_zy_logvar = stochastic_layer(l_px_azy, input_size**2, 1, px_nonlinearity)
+            l_px_azy, l_px_zy_mu, l_px_zy_logvar = stochastic_layer(l_px_azy, self.input_size**2 + self.n_mi_features, 1, px_nonlinearity)
 
         ############################################################################
 
@@ -268,10 +290,10 @@ class ConvSDGMSSL(Model):
         self.l_pa_logvar = ReshapeLayer(l_pa_zy_logvar, (-1, self.sym_samples, 1, n_a))
 
         # Output of the generative network p(x|a,z,y)
-        self.l_px = ReshapeLayer(l_px_azy, (-1, self.sym_samples, 1, input_size**2))
-        self.l_px_mu = ReshapeLayer(l_px_zy_mu, (-1, self.sym_samples, 1, input_size**2)) if x_dist == "gaussian" else None
+        self.l_px = ReshapeLayer(l_px_azy, (-1, self.sym_samples, 1, self.input_size**2 + self.n_mi_features))
+        self.l_px_mu = ReshapeLayer(l_px_zy_mu, (-1, self.sym_samples, 1, self.input_size**2 + self.n_mi_features)) if x_dist == "gaussian" else None
         self.l_px_logvar = ReshapeLayer(l_px_zy_logvar,
-                                        (-1, self.sym_samples, 1, input_size**2)) if x_dist == "gaussian" else None
+                                        (-1, self.sym_samples, 1, self.input_size**2 + self.n_mi_features)) if x_dist == "gaussian" else None
 
 
         # Predefined functions
@@ -363,7 +385,7 @@ class ConvSDGMSSL(Model):
         #   [x[1,0], x[1,1], ..., x[1,n_x]]]         [0, 0, 1]]
         t_eye = T.eye(self.n_y, k=0)
         t_u = t_eye.reshape((self.n_y, 1, self.n_y)).repeat(bs_u, axis=1).reshape((-1, self.n_y))
-        x_u = self.sym_x_u.reshape((1, bs_u, self.input_size**2)).repeat(self.n_y, axis=0).reshape((-1, self.input_size**2))
+        x_u = self.sym_x_u.reshape((1, bs_u, self.input_size**2 + self.n_mi_features)).repeat(self.n_y, axis=0).reshape((-1, self.input_size**2 + self.n_mi_features))
 
         # Since the expectation of var a is outside the integration we calculate E_q(a|x) first
         a_x_u = get_output(self.l_qa, self.sym_x_u, batch_norm_update_averages=True, batch_norm_use_averages=False)

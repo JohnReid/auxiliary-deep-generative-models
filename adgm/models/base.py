@@ -6,9 +6,6 @@ import theano.tensor as T
 from ..utils import env_paths as paths
 from collections import OrderedDict
 
-from logging import getLogger
-logger = getLogger(__name__)
-
 
 class Model(object):
     """
@@ -16,7 +13,7 @@ class Model(object):
     It should be subclassed when implementing new types of models.
     """
 
-    def __init__(self, n_in, n_hidden, n_out, trans_func):
+    def __init__(self, n_in, n_hidden, n_out, trans_func, model_logger):
         """
         Initialisation of the basic architecture and programmatic settings of any model.
         This method should be called from any subsequent inheriting model.
@@ -38,6 +35,8 @@ class Model(object):
         self.model_name = self.__class__.__name__
         self.root_path = None
 
+        self.model_logger = model_logger
+
     def get_root_path(self):
         """
         The root path of the model is where serialization, plots etc are saved.
@@ -56,7 +55,7 @@ class Model(object):
         :param update: The update function (optimization framework) used for training (cf. updates.py), e.g. sgd.
         :param update_args: The args for the update function applied to training, e.g. (0.001,).
         """
-        logger.info("### BUILDING MODEL ###")
+        self.model_logger.info("### BUILDING MODEL ###")
 
         self.train_args = {}
         self.train_args['inputs'] = OrderedDict({})

@@ -10,15 +10,13 @@ import seaborn as sns
 import numpy as np
 import cPickle as pkl
 
-LOGFORMAT = '%(asctime)s %(levelname)s %(message)s'
-
 class Train(object):
     """
     The :class:'Train' class general training functions.
     It should be subclassed when implementing new types of training loops.
     """
 
-    def __init__(self, model, pickle_f_custom_freq=None, custom_eval_func=None):
+    def __init__(self, model, model_logger, model_directory, pickle_f_custom_freq=None, custom_eval_func=None):
         """
         Initialisation of the basic architecture and programmatic settings of any training procedure.
         This method should be called from any subsequent inheriting training procedure.
@@ -27,14 +25,28 @@ class Train(object):
         :param custom_eval_func: The custom evaluation function taking (model, output_path) as arguments.
         """
         self.model = model
-        self.logger = None
-        self.init_logging()
+        self.model_logger = model_logger
+        self.open_csv_files(model_directory)
         self.x_dist = None
         self.custom_eval_func = custom_eval_func
         self.eval_train = {}
         self.eval_test = {}
         self.eval_validation = {}
         self.pickle_f_custom_freq = pickle_f_custom_freq
+        self.test_auprc_list = []
+
+    def open_csv_files(self, model_directory):
+        #
+        # Open a file to save learning curve information
+        learningcsvfile = os.path.join(model_directory, 'learning.csv')
+        self.model_logger.info('Will write learning curves to: %s', learningcsvfile)
+        self.learning_csv = open(learningcsvfile, 'w')
+        # These output columns can change, don't hardcode them
+        # self.learning_csv.write('epoch,time,lb,lb-labeled,lb-unlabeled,test,validation')
+        # Csv file for test evaluation log
+        testevalcsvfile = os.path.join(model_directory, 'testeval.csv')
+        self.model_logger.info('Will write test eval values to: %s', testevalcsvfile)
+        self.testeval_csv = open(testevalcsvfile, 'w')
 
     def train_model(self, *args):
         """
@@ -76,38 +88,12 @@ class Train(object):
         plt.xlabel('Epochs')
         plt.savefig(paths.get_plot_evaluation_path_for_model(self.model.get_root_path(), path_extension+".png"))
 
-    def init_logging(self):
-        """
-        Initiate the logging, so that all the training output will be saved in a .log file.
-        """
-        self.logger = logging.getLogger('{}.{}'.format(self.__class__,  str(id(self))))
-        formatter = logging.Formatter(LOGFORMAT)
-        #
-        # Add a FileHandler
-        logpath = paths.get_logging_path(self.model.get_root_path())
-        hdlr = logging.FileHandler(logpath)
-        hdlr.setFormatter(formatter)
-        self.logger.addHandler(hdlr)
-        #
-        # Open a file to save learning curve information
-        learningcsvfile = os.path.join(self.model.get_root_path(), 'learning.csv')
-        self.logger.info('Will write learning curves to: %s', learningcsvfile)
-        self.learning_csv = open(learningcsvfile, 'w')
-        # These output columns can change, don't hardcode them
-        # self.learning_csv.write('epoch,time,lb,lb-labeled,lb-unlabeled,test,validation')
-        # Csv file for test evaluation log
-        testevalcsvfile = os.path.join(self.model.get_root_path(), 'testeval.csv')
-        self.logger.info('Will write test eval values to: %s', testevalcsvfile)
-        self.testeval_csv = open(testevalcsvfile, 'w')
-
     def write_to_logger(self, s):
         """
         Write a string to the logger and the console.
         :param s: A string with the text to print.
         """
-        self.logger.info(s)
-
-
+        self.model_logger.info(s)
 
     def add_initial_training_notes(self, s):
         """
@@ -126,10 +112,3 @@ class Train(object):
                 new_s += "\n"
             new_s += " " + w_lst[i]
         self.write_to_logger(new_s)
-
-    def write_config_file(self, config_dict):
-        configfilepath = os.path.join(self.model.get_root_path(), 'config.txt')
-        self.logger.info('Writing config file at %s', configfilepath)
-        configfile = open(configfilepath, 'w')
-        for k, v in config_dict.iteritems():
-            configfile.write('{}: {}\n'.format(k,v))
