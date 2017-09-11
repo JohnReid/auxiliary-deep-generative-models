@@ -6,7 +6,7 @@ import time
 
 class TrainModel(Train):
     def __init__(self, model, model_logger, model_directory, output_freq=1, pickle_f_custom_freq=None,
-                 f_custom_eval=None):
+                 f_custom_eval=None, elbo_change_threshold=1e-6):
         super(TrainModel, self).__init__(model, model_logger, model_directory, pickle_f_custom_freq, f_custom_eval)
         self.output_freq = output_freq
 
@@ -46,7 +46,7 @@ class TrainModel(Train):
                 #self.model_logger.info('prev epoch elbo = {}, this epoch elbo = {}'.format(prev_epoch_elbo, this_epoch_elbo))
                 rel_elbo_change = (prev_epoch_elbo - this_epoch_elbo)/prev_epoch_elbo
                 #self.model_logger.info('relative elbo change = {:.4e}'.format(rel_elbo_change))
-                return abs(rel_elbo_change) < 1e-8
+                return rel_elbo_change < elbo_change_threshold
 
         print 'Training...'
         while (epoch < n_epochs):
