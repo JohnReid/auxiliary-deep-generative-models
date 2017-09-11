@@ -111,7 +111,7 @@ class TrainModel(Train):
                 #outputs += [float(o) for o in self.eval_validation[epoch]]
 
                 for name, value in zip(['lb', 'lb-l', 'lb-u'], outputs):
-                    output_str += '{}={:.4e}'.format(name, value)
+                    output_str += '{}={}'.format(name, value)
 
                 self.write_to_logger(output_str)
 
