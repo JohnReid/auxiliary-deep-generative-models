@@ -46,7 +46,7 @@ class TrainModel(Train):
                 #self.model_logger.info('prev epoch elbo = {}, this epoch elbo = {}'.format(prev_epoch_elbo, this_epoch_elbo))
                 rel_elbo_change = (prev_epoch_elbo - this_epoch_elbo)/prev_epoch_elbo
                 #self.model_logger.info('relative elbo change = {:.4e}'.format(rel_elbo_change))
-                return rel_elbo_change < 1e-6
+                return abs(rel_elbo_change) < 1e-8
 
         print 'Training...'
         while (epoch < n_epochs):
@@ -102,16 +102,16 @@ class TrainModel(Train):
                         out_str += " %s=%s;" % (k, v)
                     return out_str
 
-                output_str = concatenate_output_str(output_str, train_args['outputs'])
+                #output_str = concatenate_output_str(output_str, train_args['outputs'])
                 #output_str = concatenate_output_str(output_str, test_args['outputs'])
-                output_str = concatenate_output_str(output_str, validation_args['outputs'])
+                #output_str = concatenate_output_str(output_str, validation_args['outputs'])
 
                 outputs = [float(o) for o in self.eval_train[epoch]]
                 #outputs += [float(o) for o in self.eval_test[epoch]]
                 #outputs += [float(o) for o in self.eval_validation[epoch]]
 
                 for name, value in zip(['lb', 'lb-l', 'lb-u'], outputs):
-                    output_str += '{}={}'.format(name, value)
+                    output_str += '{}={}; '.format(name, value)
 
                 self.write_to_logger(output_str)
 
