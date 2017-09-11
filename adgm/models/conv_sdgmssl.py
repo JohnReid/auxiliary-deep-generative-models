@@ -444,7 +444,7 @@ class ConvSDGMSSL(Model):
 
         # Training function
         indices = self._srng.choice(size=[self.sym_bs_l], a=sh_train_x_l.shape[0], replace=False)
-        x_batch_l = sh_train_x_l[indices]
+        x_batch_l = sh_train_x_l[indices] # Change these to symbolic variables and generate them in training loop
         t_batch_l = sh_train_t_l[indices]
         x_batch_u = self.sh_train_x[self.batch_slice]
         if self.x_dist == 'bernoulli':  # Sample bernoulli input.

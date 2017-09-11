@@ -95,6 +95,7 @@ class Train(object):
         """
         self.model_logger.info(s)
 
+
     def add_initial_training_notes(self, s):
         """
         Add an initial text for the model as a personal

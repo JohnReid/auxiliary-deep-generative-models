@@ -27,11 +27,12 @@ class TrainModel(Train):
 
         self.write_to_logger("### TRAINING MODEL ###")
 
-        if self.custom_eval_func is not None:
-            test_auprc = self.custom_eval_func(self.model)
-            self.test_auprc_list.append((0,test_auprc))
-            print >>self.testeval_csv, '0, {}'.format(test_auprc)
-            self.testeval_csv.flush()
+        if True:  
+            if self.custom_eval_func is not None:
+                test_auprc = self.custom_eval_func(self.model)
+                self.test_auprc_list.append((0,test_auprc))
+                print >>self.testeval_csv, '0, {}'.format(test_auprc)
+                self.testeval_csv.flush()
 
         done_looping = False
         epoch = 0
@@ -47,6 +48,7 @@ class TrainModel(Train):
                 self.model_logger.info('relative elbo change = {:.4e}'.format(rel_elbo_change))
                 return rel_elbo_change < 1e-6
 
+        print 'Training...'
         while (epoch < n_epochs):
             epoch += 1
             start_time = time.time()
@@ -70,7 +72,8 @@ class TrainModel(Train):
 
             if epoch % self.output_freq == 0:
                 if n_test_batches == 1:
-                    self.eval_test[epoch] = f_test(*test_args['inputs'].values())
+                    #self.eval_test[epoch] = f_test(*test_args['inputs'].values())
+                    self.eval_test[epoch] = 0.0
                 else:
                     test_outputs = []
                     for i in xrange(n_test_batches):
@@ -86,7 +89,7 @@ class TrainModel(Train):
                         for i in xrange(n_valid_batches):
                             valid_output = f_validate(i, *validation_args['inputs'].values())
                             valid_outputs.append(valid_output)
-                        self.eval_validation[epoch] = np.mean(np.array(valid_outputs), axis=0)
+                        self.eval_validation[epoch] = np.mean(np.array(valid_outputs), axis=0)#
                 else:
                     self.eval_validation[epoch] = [0.] * len(validation_args['outputs'].keys())
 
@@ -104,10 +107,10 @@ class TrainModel(Train):
                 output_str = concatenate_output_str(output_str, validation_args['outputs'])
 
                 outputs = [float(o) for o in self.eval_train[epoch]]
-                outputs += [float(o) for o in self.eval_test[epoch]]
-                outputs += [float(o) for o in self.eval_validation[epoch]]
+                #outputs += [float(o) for o in self.eval_test[epoch]]
+                #outputs += [float(o) for o in self.eval_validation[epoch]]
 
-                output_str %= tuple(outputs)
+                output_str = tuple(str(f) for f in outputs)
                 self.write_to_logger(output_str)
 
                 #

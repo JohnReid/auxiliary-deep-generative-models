@@ -77,9 +77,9 @@ class Model(object):
         self.sh_train_x = theano.shared(np.asarray(train_set[0], dtype=theano.config.floatX), borrow=True)
         if train_set[1] is not None:
             self.sh_train_t = theano.shared(np.asarray(train_set[1], dtype=theano.config.floatX), borrow=True)
-        self.sh_test_x = theano.shared(np.asarray(test_set[0], dtype=theano.config.floatX), borrow=True)
+        self.sh_test_x = theano.shared(np.asarray(test_set[0], dtype=theano.config.floatX), borrow=True, target='cpu')
         if test_set[1] is not None:
-            self.sh_test_t = theano.shared(np.asarray(test_set[1], dtype=theano.config.floatX), borrow=True)
+            self.sh_test_t = theano.shared(np.asarray(test_set[1], dtype=theano.config.floatX), borrow=True, target='cpu')
         if validation_set is not None:
             self.sh_valid_x = theano.shared(np.asarray(validation_set[0], dtype=theano.config.floatX), borrow=True)
             if validation_set[1] is not None:
