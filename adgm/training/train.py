@@ -40,12 +40,12 @@ class TrainModel(Train):
 
         def is_stopping_criterion_met(prev_epoch_elbo, this_epoch_elbo):
             if prev_epoch_elbo is None:
-                print 'First epoch'
+                #print 'First epoch'
                 return False
             else:
-                self.model_logger.info('prev epoch elbo = {}, this epoch elbo = {}'.format(prev_epoch_elbo, this_epoch_elbo))
+                #self.model_logger.info('prev epoch elbo = {}, this epoch elbo = {}'.format(prev_epoch_elbo, this_epoch_elbo))
                 rel_elbo_change = (prev_epoch_elbo - this_epoch_elbo)/prev_epoch_elbo
-                self.model_logger.info('relative elbo change = {:.4e}'.format(rel_elbo_change))
+                #self.model_logger.info('relative elbo change = {:.4e}'.format(rel_elbo_change))
                 return rel_elbo_change < 1e-6
 
         print 'Training...'
@@ -103,14 +103,14 @@ class TrainModel(Train):
                     return out_str
 
                 output_str = concatenate_output_str(output_str, train_args['outputs'])
-                output_str = concatenate_output_str(output_str, test_args['outputs'])
+                #output_str = concatenate_output_str(output_str, test_args['outputs'])
                 output_str = concatenate_output_str(output_str, validation_args['outputs'])
 
                 outputs = [float(o) for o in self.eval_train[epoch]]
                 #outputs += [float(o) for o in self.eval_test[epoch]]
                 #outputs += [float(o) for o in self.eval_validation[epoch]]
 
-                output_str = tuple(str(f) for f in outputs)
+                output_str += [str(f) for f in outputs]
                 self.write_to_logger(output_str)
 
                 #
