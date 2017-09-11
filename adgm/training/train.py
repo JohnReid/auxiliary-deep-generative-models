@@ -9,6 +9,7 @@ class TrainModel(Train):
                  f_custom_eval=None, elbo_change_threshold=1e-6):
         super(TrainModel, self).__init__(model, model_logger, model_directory, pickle_f_custom_freq, f_custom_eval)
         self.output_freq = output_freq
+        self.elbo_change_threshold = elbo_change_threshold
 
     def train_model(self, f_train, train_args, f_test, test_args, f_validate, validation_args,
                     n_train_batches=600, n_valid_batches=1, n_test_batches=1, n_epochs=100, anneal=None):
@@ -46,7 +47,7 @@ class TrainModel(Train):
                 #self.model_logger.info('prev epoch elbo = {}, this epoch elbo = {}'.format(prev_epoch_elbo, this_epoch_elbo))
                 rel_elbo_change = (prev_epoch_elbo - this_epoch_elbo)/prev_epoch_elbo
                 #self.model_logger.info('relative elbo change = {:.4e}'.format(rel_elbo_change))
-                return rel_elbo_change < elbo_change_threshold
+                return rel_elbo_change < self.elbo_change_threshold
 
         print 'Training...'
         while (epoch < n_epochs):
