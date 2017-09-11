@@ -110,7 +110,9 @@ class TrainModel(Train):
                 #outputs += [float(o) for o in self.eval_test[epoch]]
                 #outputs += [float(o) for o in self.eval_validation[epoch]]
 
-                output_str += [str(f) for f in outputs]
+                for f in outputs:
+                    output_str += str(f)
+                    
                 self.write_to_logger(output_str)
 
                 #
