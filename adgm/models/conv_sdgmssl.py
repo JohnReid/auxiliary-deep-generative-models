@@ -87,7 +87,7 @@ class ConvSDGMSSL(Model):
         def conv_net(input_layer):
             if self.n_mi_features != 0:
                 conv_input = SliceLayer(input_layer, indices=slice(0,input_layer.shape[1] - self.n_mi_features))
-                mi_input = SliceLayer(input_layer, indices=slice(input_layer.shape[1]-2,None))
+                mi_input = SliceLayer(input_layer, indices=slice(input_layer.shape[1]-self.n_mi_features, None))
             else:
                 conv_input = input_layer
                 mi_input = None
