@@ -46,6 +46,8 @@ class Model(object):
             self.root_path = paths.create_root_output_path(self.model_name, self.n_in, self.n_hidden, self.n_out)
         return self.root_path
 
+
+    # This training set refers to unlablled trainign set
     def build_model(self, train_set, test_set, validation_set):
         """
         Building the model should be done prior to training. It will implement the training, testing and validation
@@ -74,9 +76,9 @@ class Model(object):
         self.sym_lr = T.scalar('learningrate')
         self.batch_slice = slice(self.sym_index * self.sym_batchsize, (self.sym_index + 1) * self.sym_batchsize)
 
-        self.sh_train_x = theano.shared(np.asarray(train_set[0], dtype=theano.config.floatX), borrow=True)
+        self.sh_train_x = theano.shared(np.asarray(train_set[0], dtype=theano.config.floatX), borrow=True, target='cpu')
         if train_set[1] is not None:
-            self.sh_train_t = theano.shared(np.asarray(train_set[1], dtype=theano.config.floatX), borrow=True)
+            self.sh_train_t = theano.shared(np.asarray(train_set[1], dtype=theano.config.floatX), borrow=True, target='cpu')
         self.sh_test_x = theano.shared(np.asarray(test_set[0], dtype=theano.config.floatX), borrow=True, target='cpu')
         if test_set[1] is not None:
             self.sh_test_t = theano.shared(np.asarray(test_set[1], dtype=theano.config.floatX), borrow=True, target='cpu')
