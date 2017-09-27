@@ -46,7 +46,7 @@ class TrainModel(Train):
             else:
                 #self.model_logger.info('prev epoch elbo = {}, this epoch elbo = {}'.format(prev_epoch_elbo, this_epoch_elbo))
                 rel_elbo_change = (prev_epoch_elbo - this_epoch_elbo)/prev_epoch_elbo
-                #self.model_logger.info('relative elbo change = {:.4e}'.format(rel_elbo_change))
+                self.model_logger.info('relative elbo change = {:.4e}'.format(rel_elbo_change))
                 return np.abs(rel_elbo_change) < self.elbo_change_threshold
 
         print 'Training...'
