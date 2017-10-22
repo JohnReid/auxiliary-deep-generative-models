@@ -6,6 +6,9 @@ import theano.tensor as T
 from ..utils import env_paths as paths
 from collections import OrderedDict
 
+from logHandler import Logger
+logger = Logger.getChildLogger()
+
 
 class Model(object):
     """
@@ -13,7 +16,7 @@ class Model(object):
     It should be subclassed when implementing new types of models.
     """
 
-    def __init__(self, n_in, n_hidden, n_out, trans_func, model_logger):
+    def __init__(self, n_in, n_hidden, n_out, trans_func):
         """
         Initialisation of the basic architecture and programmatic settings of any model.
         This method should be called from any subsequent inheriting model.
@@ -35,8 +38,6 @@ class Model(object):
         self.model_name = self.__class__.__name__
         self.root_path = None
 
-        self.model_logger = model_logger
-
     def get_root_path(self):
         """
         The root path of the model is where serialization, plots etc are saved.
@@ -57,7 +58,7 @@ class Model(object):
         :param update: The update function (optimization framework) used for training (cf. updates.py), e.g. sgd.
         :param update_args: The args for the update function applied to training, e.g. (0.001,).
         """
-        self.model_logger.info("### BUILDING MODEL ###")
+        print("### BUILDING MODEL ###")
 
         self.train_args = {}
         self.train_args['inputs'] = OrderedDict({})
@@ -113,7 +114,7 @@ class Model(object):
             init_param = self.model_params[i]
             loaded_param = model_params[i]
             if not loaded_param.shape == tuple(init_param.shape.eval()):
-                logger.info("Model could not be loaded, since parameters are not aligned.")
+                logger.error("Model could not be loaded, since parameters are not aligned.")
             self.model_params[i].set_value(np.asarray(model_params[i], dtype=theano.config.floatX), borrow=True)
 
     def get_output(self, x):
@@ -147,3 +148,7 @@ class Model(object):
 
     def after_epoch(self):
         pass
+
+    def write_to_logger(self, s):
+        logger.info(s)
+

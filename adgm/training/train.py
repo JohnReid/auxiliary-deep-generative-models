@@ -3,16 +3,15 @@ from ..utils import env_paths as paths
 from base import Train
 import time
 
-
 class TrainModel(Train):
-    def __init__(self, model, model_logger, model_directory, output_freq=1, pickle_f_custom_freq=None,
-                 f_custom_eval=None, elbo_change_threshold=1e-6):
-        super(TrainModel, self).__init__(model, model_logger, model_directory, pickle_f_custom_freq, f_custom_eval)
+    def __init__(self, model, output_freq=1, pickle_f_custom_freq=None,
+                 f_custom_eval=None):
+        super(TrainModel, self).__init__(model, pickle_f_custom_freq, f_custom_eval)
         self.output_freq = output_freq
-        self.elbo_change_threshold = elbo_change_threshold
 
     def train_model(self, f_train, train_args, f_test, test_args, f_validate, validation_args,
-                    n_train_batches=600, n_valid_batches=1, n_test_batches=1, n_epochs=100, anneal=None):
+                    n_train_batches=600, n_valid_batches=1, n_test_batches=1, n_epochs=100, anneal=None,
+                    elbo_change_threshold=1e-6, model_interface=None):
         self.write_to_logger("### MODEL PARAMS ###")
         self.write_to_logger(self.model.model_info())
         self.write_to_logger("### TRAINING PARAMS ###")
@@ -26,30 +25,45 @@ class TrainModel(Train):
                 self.write_to_logger(
                     "Anneal %s %0.4f after %i epochs with minimum value %f." % (key, rate, int(freq), min_val))
 
+        self.write_to_logger('\n')
         self.write_to_logger("### TRAINING MODEL ###")
 
-        if True:  
-            if self.custom_eval_func is not None:
-                test_auprc = self.custom_eval_func(self.model)
-                self.test_auprc_list.append((0,test_auprc))
-                print >>self.testeval_csv, '0, {}'.format(test_auprc)
-                self.testeval_csv.flush()
+        #
+        # Functions used in training
+        #
+        def is_stopping_criterion_met(prev_epoch_elbo, this_epoch_elbo):
+            if prev_epoch_elbo is None:
+                #self.write_to_logger('First epoch')
+                return False
+            else:
+                #self.write_to_logger('prev epoch elbo = {}, this epoch elbo = {}'.format(prev_epoch_elbo, this_epoch_elbo))
+                rel_elbo_change = (prev_epoch_elbo - this_epoch_elbo)/prev_epoch_elbo
+                #self.write_to_logger('relative elbo change = {:.4e}'.format(rel_elbo_change))
+                return np.abs(rel_elbo_change) < elbo_change_threshold
+
+
+        def eval_test_auprc():
+            # Compute test AUPRC and add it to model inferface
+            test_auprc = self.custom_eval_func()
+            self.write_to_logger('AUPRC on the test set at epoch {} = {}'.format(epoch, test_auprc))
+            if model_interface is not None:
+                model_interface.model_test_AUPRCs.append((epoch, test_auprc))
+            # Write the result to csv file
+            print >>self.testeval_csv, '{}, {}'.format(epoch, test_auprc)
+            self.testeval_csv.flush()
 
         done_looping = False
         epoch = 0
         prev_epoch_elbo = None
 
-        def is_stopping_criterion_met(prev_epoch_elbo, this_epoch_elbo):
-            if prev_epoch_elbo is None:
-                #print 'First epoch'
-                return False
-            else:
-                #self.model_logger.info('prev epoch elbo = {}, this epoch elbo = {}'.format(prev_epoch_elbo, this_epoch_elbo))
-                rel_elbo_change = (prev_epoch_elbo - this_epoch_elbo)/prev_epoch_elbo
-                self.model_logger.info('relative elbo change = {:.4e}'.format(rel_elbo_change))
-                return np.abs(rel_elbo_change) < self.elbo_change_threshold
+        #
+        # Get initial test AUPRC
+        #
+        eval_test_auprc()
 
-        print 'Training...'
+        #
+        # Training starts here
+        #
         while (epoch < n_epochs):
             epoch += 1
             start_time = time.time()
@@ -105,11 +119,9 @@ class TrainModel(Train):
 
                 #output_str = concatenate_output_str(output_str, train_args['outputs'])
                 #output_str = concatenate_output_str(output_str, test_args['outputs'])
-                #output_str = concatenate_output_str(output_str, validation_args['outputs'])
 
                 outputs = [float(o) for o in self.eval_train[epoch]]
                 #outputs += [float(o) for o in self.eval_test[epoch]]
-                #outputs += [float(o) for o in self.eval_validation[epoch]]
 
                 for name, value in zip(['lb', 'lb-l', 'lb-u'], outputs):
                     output_str += '{}={}; '.format(name, value)
@@ -126,15 +138,8 @@ class TrainModel(Train):
 
             if self.pickle_f_custom_freq is not None and epoch % self.pickle_f_custom_freq == 0:
                 if self.custom_eval_func is not None:
-                    test_auprc = self.custom_eval_func(self.model)
-                    self.test_auprc_list.append((epoch,test_auprc))
-                    print >>self.testeval_csv, '{}, {}'.format(epoch, test_auprc)
-                    self.testeval_csv.flush()
-                #self.plot_eval(self.eval_train, train_args['outputs'].keys(), "_train")
-                #self.plot_eval(self.eval_test, test_args['outputs'].keys(), "_test")
-                #self.plot_eval(self.eval_validation, validation_args['outputs'].keys(), "_validation")
-                #self.dump_dicts()
-                #self.model.dump_model()
+                    eval_test_auprc()
+
 
             #
             # Check if stopping criterion is met
@@ -152,5 +157,5 @@ class TrainModel(Train):
 
         # Log final test AUPRC
         if self.custom_eval_func is not None:
-            test_auprc = self.custom_eval_func(self.model)
-            self.test_auprc_list.append((epoch,test_auprc))
+            eval_test_auprc()
+

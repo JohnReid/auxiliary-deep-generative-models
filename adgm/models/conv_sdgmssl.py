@@ -22,11 +22,11 @@ class ConvSDGMSSL(Model):
     Auxiliary Generative Models article on Arxiv.org.
     """
 
-    def __init__(self, input_size, n_a, n_z, n_y, qa_hid, qz_hid, qy_hid, px_hid, pa_hid, model_logger, nonlinearity=rectify,
+    def __init__(self, input_size, n_a, n_z, n_y, qa_hid, qz_hid, qy_hid, px_hid, pa_hid, nonlinearity=rectify,
                  n_mi_features=0, dropout_prob=0.0, px_nonlinearity=None, x_dist='bernoulli', batchnorm=False, seed=1234,
                  conv_output_size=512):
 
-        super(ConvSDGMSSL, self).__init__(input_size**2, qz_hid + px_hid, n_a + n_z, nonlinearity, model_logger)
+        super(ConvSDGMSSL, self).__init__(input_size**2, qz_hid + px_hid, n_a + n_z, nonlinearity)
         self.x_dist = x_dist
         self.n_y = n_y
         self.input_size = input_size
